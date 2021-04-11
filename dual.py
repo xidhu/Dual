@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 pygame.init()
 screen = pygame.display.set_mode((1000, 500))
@@ -7,7 +8,9 @@ pygame.display.set_caption("Dual")
 
 
 class Sprite(pygame.sprite.Sprite):
-    __x_dir = 10
+
+    __speed = 10
+    __x_dir = __speed
     __y_dir = 0
 
     def __init__(self, pos, color):
@@ -32,27 +35,45 @@ class Sprite(pygame.sprite.Sprite):
 
     def getDirection(self):
         return (self.__x_dir, self.__y_dir)
-
     def bounce(self, touch):
-        rand = random.randint(-2, 2)
+        print("das")
+        change = math.floor(self.__speed/5)
+        rand = random.randint(-change,change)
         if touch == 'right':
-            self.changeXDir(-10)
+            self.changeXDir(-self.__speed)
             self.changeYDir(self.__y_dir+rand)
         elif touch == 'left':
-            self.changeXDir(10)
+            self.changeXDir(self.__speed)
             self.changeYDir(self.__y_dir+rand)
         elif touch == 'up':
-            self.changeYDir(10)
+            self.changeYDir(self.__speed)
             self.changeXDir(self.__x_dir+rand)
         elif touch == 'down':
-            self.changeYDir(-10)
+            self.changeYDir(-self.__speed)
             self.changeXDir(self.__x_dir+rand)
+
+    def changeSpeed(self, speed):
+        self.__speed = speed
+
+class Bat(pygame.sprite.Sprite):
+    def __init__(self,pos,color):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([20,80])
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+
 
 
 player_grp = pygame.sprite.Group()
 player = Sprite([20, 20], (0, 255, 0))
 player_grp.add(player)
 
+bat_grp = pygame.sprite.Group()
+batL = Bat([15,100],(0,0,255))
+batR = Bat([screen.get_width()-15,100],(0,0,255))
+bat_grp.add(batL)
+bat_grp.add(batR)
 
 def isTouchingWall(player, screen):
     height = screen.get_height()
@@ -69,26 +90,33 @@ def isTouchingWall(player, screen):
         else:
             return 'down'
 
+def isTouchingBat():
+    if(pygame.sprite.spritecollide(batL,player_grp,True)):
+        return 'left'
+    elif pygame.sprite.spritecollide(batR,player_grp,True):
+        return 'right'
+    else:
+        return False
+
+
 
 def checkKey():
     key = pygame.key.get_pressed()
-    if(key[pygame.K_DOWN]):
-        player.rect.move_ip(0, 10)
-    if(key[pygame.K_UP]):
-        player.rect.move_ip(0, -10)
-    if(key[pygame.K_RIGHT]):
-        player.rect.move_ip(10, 0)
-    if(key[pygame.K_LEFT]):
-        player.rect.move_ip(-10, 0)
+    if(key[pygame.K_DOWN] and batR.rect.centery < screen.get_height()):
+        batR.rect.move_ip(0, 10)
+    if(key[pygame.K_UP] and batR.rect.centery > 0):
+        batR.rect.move_ip(0, -10)
 
 
 def main():
     checkKey()
     touch = isTouchingWall(player, screen)
+    touchBat = isTouchingBat()
     if touch:
-            player.bounce(touch)
-    player.move()   
-        
+        player.bounce(touch)
+    if touchBat:
+        player.bounce(touchBat)
+    player.move()
 
 
 def update():
@@ -99,6 +127,7 @@ def update():
     screen.fill([0, 0, 0])
     main()
     pygame.time.wait(30)
+    bat_grp.draw(screen)
     player_grp.draw(screen)
     pygame.display.update()
 
