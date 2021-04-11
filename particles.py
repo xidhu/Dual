@@ -1,12 +1,10 @@
 import pygame
 import random
 
-
 pygame.init()
-screen = pygame.display.set_mode((1000, 1000))
-pygame.display.set_caption("Particles")
+screen = pygame.display.set_mode((1000, 500))
+pygame.display.set_caption("Dual")
 
-particle_count = 1000
 
 class Sprite(pygame.sprite.Sprite):
     __x_dir = 10
@@ -52,9 +50,8 @@ class Sprite(pygame.sprite.Sprite):
 
 
 player_grp = pygame.sprite.Group()
-
-for i in range(particle_count):
-    player_grp.add(Sprite([20, 20], (0, 255, 0)))
+player = Sprite([20, 20], (0, 255, 0))
+player_grp.add(player)
 
 
 def isTouchingWall(player, screen):
@@ -86,12 +83,12 @@ def checkKey():
 
 
 def main():
-    #checkKey()
-    for player in player_grp.sprites():
-        touch = isTouchingWall(player, screen)
-        if touch:
+    checkKey()
+    touch = isTouchingWall(player, screen)
+    if touch:
             player.bounce(touch)
-        player.move()
+    player.move()   
+        
 
 
 def update():
